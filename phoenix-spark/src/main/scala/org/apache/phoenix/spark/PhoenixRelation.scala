@@ -23,6 +23,8 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.sql.sources._
 import org.apache.phoenix.util.StringUtil.escapeStringConstant
+import java.sql.Timestamp
+import java.util.TimeZone
 
 case class PhoenixRelation(tableName: String, zkUrl: String)(@transient val sqlContext: SQLContext)
     extends BaseRelation with PrunedFilteredScan {
@@ -106,6 +108,8 @@ case class PhoenixRelation(tableName: String, zkUrl: String)(@transient val sqlC
     case utf if (isClass(utf, "org.apache.spark.sql.types.UTF8String")) => s"'${escapeStringConstant(utf.toString)}'"
     // Spark 1.5
     case utf if (isClass(utf, "org.apache.spark.unsafe.types.UTF8String")) => s"'${escapeStringConstant(utf.toString)}'"
+
+    case tsValue: Timestamp => s"TO_TIMESTAMP('${tsValue}', 'yyyy-MM-dd HH:mm:ss.s', '${TimeZone.getDefault().getID()}')"
 
     // Pass through anything else
     case _ => value
