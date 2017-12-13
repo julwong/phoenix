@@ -18,11 +18,12 @@ import org.apache.hadoop.io.NullWritable
 import org.apache.phoenix.mapreduce.PhoenixOutputFormat
 import org.apache.phoenix.mapreduce.util.{ColumnInfoToStringEncoderDecoder, PhoenixConfigurationUtil}
 import org.apache.phoenix.util.SchemaUtil
-import org.apache.spark.Logging
 import org.apache.spark.sql.DataFrame
 import scala.collection.JavaConversions._
 
-class DataFrameFunctions(data: DataFrame) extends Logging with Serializable {
+class DataFrameFunctions(data: DataFrame) extends Serializable {
+
+  import data.sqlContext.implicits._
 
   def saveToPhoenix(tableName: String, conf: Configuration = new Configuration,
                     zkUrl: Option[String] = None): Unit = {
@@ -52,7 +53,8 @@ class DataFrameFunctions(data: DataFrame) extends Logging with Serializable {
     }
 
     // Save it
-    phxRDD.saveAsNewAPIHadoopFile(
+    // TODO: phxRDD.rdd breaks compatibility with Spark1
+    phxRDD.rdd.saveAsNewAPIHadoopFile(
       "",
       classOf[NullWritable],
       classOf[PhoenixRecordWritable],
